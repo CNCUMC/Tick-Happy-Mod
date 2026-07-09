@@ -1,166 +1,99 @@
-# Moss-Template
+# Tick Happy Mod
 
-一个用于开发 `Casualties Unknown` 模组的 [dotnet new](https://learn.microsoft.com/zh-cn/dotnet/core/tools/dotnet-new)
-模板。
+[中文指南](README_ZH.md)
 
-基于 [05126619z/ScavTemplate](https://github.com/05126619z/ScavTemplate)。
+_A mod banning / player-kicking utility
+for [Casualties Unknown](https://store.steampowered.com/app/3624440/Casualties_Unknown_Demo/) multiplayer._
 
----
-
-## 快速开始
-
-### 方式一：使用 `NewMod.ps1`（推荐）
-
-1. 克隆本仓库并注册模板：
-
-```powershell
-git clone https://github.com/CNCUMC/Moss-Template.git
-cd Moss-Template
-dotnet new install .
-```
-
-2. 在任意目录运行创建脚本：
-
-```powershell
-cd E:/Projects  # 你想创建项目的目录
-<path-to>\NewMod.ps1
-```
-
-脚本会自动：
-
-- 搜索 Steam 安装路径中的 Casualties Unknown 游戏目录
-- 交互式提示输入模组名称、GUID、版本等信息
-- 调用 `dotnet new tickhappymod` 生成项目
-- 所有文件名和内容自动替换完成
-
-3. 构建并测试：
-
-```powershell
-cd MyCoolMod
-dotnet build
-```
-
-### 方式二：使用 `dotnet new` 命令
-
-注册模板后（见上方第 1 步），直接使用命令行：
-
-```powershell
-dotnet new tickhappymod -n MyCoolMod `
-    --ModDisplayName "My Cool Mod" `
-    --ModGuid "com.example.mycoolmod" `
-    --ModVersion "1.0.0" `
-    --AuthorName "Your Name" `
-    --GameManagedDir "E:/SteamLibrary/steamapps/common/Casualties Unknown Demo/CasualtiesUnknown_Data/Managed"
-```
-
-### 方式三：从 GitHub 克隆（传统方式）
-
-1. 在 GitHub 上点击 [Use this template](https://github.com/new?template_name=Moss-Template) 创建仓库
-2. 克隆仓库后手动替换文件名和内容中的 `TickHappyMod`
-3. 参考下方手动配置步骤
+_Inspired by [Bat Happy Mod](https://www.curseforge.com/minecraft/mc-mods/bat-happy-mod) for Minecraft by Snownee & forestbat121._
 
 ---
 
-## 模板参数说明
+## Features
 
-| 参数                 | 说明                             | 默认值                 |
-|--------------------|--------------------------------|---------------------|
-| `-n` / `--name`    | 项目名称（PascalCase，如 `MyCoolMod`） | 必填                  |
-| `--ModDisplayName` | 模组显示名称（如 `My Cool Mod`）        | 从名称自动生成             |
-| `--ModGuid`        | 模组唯一标识（格式 `yourname.modname`）  | `com.example.mymod` |
-| `--ModVersion`     | 初始版本号                          | `1.0.0`             |
-| `--AuthorName`     | 作者名称（用于 LICENSE）               | `Your Name`         |
-| `--GameManagedDir` | 游戏 Managed 目录路径                | Steam 默认路径          |
+| Feature                      | Description                                                                                                   |
+|------------------------------|---------------------------------------------------------------------------------------------------------------|
+| **Ban Mods**                 | Configure a list of mod GUIDs. Players who have any of them installed are kicked from the server.             |
+| **Require THM**              | Optionally force all players to have Tick Happy Mod installed. Players without it are kicked after a timeout. |
+| **Single-Player Self-Check** | In single-player, the game quits immediately if a banned mod is detected locally.                             |
+| **Multiplayer Notification** | Kicked players see the reason in the KrokoshaMP alert popup.                                                  |
 
-模板会自动替换以下内容：
+## Installation
 
-- `TickHappyMod.csproj` → `{项目名}.csproj`
-- `namespace TickHappyMod` → `namespace {项目名}`
-- `org.cncumc.tickhappymod` → `{ModGuid}`
-- `Tick Happy Mod` → `{ModDisplayName}`
-- 版本号、LICENSE 作者名、csproj 中的游戏 DLL 路径
+1. Install [BepInEx 5.x](https://github.com/BepInEx/BepInEx) for Casualties Unknown.
+2. Install [KrokoshaCasualtiesMP](https://github.com/Krokosha/CasualtiesMP) (required for multiplayer features).
+3. Place `TickHappyMod.dll` into `BepInEx/plugins/Tick Happy Mod/`.
+4. Configure `BepInEx/config/org.cncumc.tickhappymod.cfg`.
 
----
+## Configuration
 
-## 关于 StartGame.ps1
+```ini
+[Tick Happy Mod]
 
-[StartGame.ps1](StartGame.ps1) 会将编译好的 DLL 文件复制到游戏目录下的 BepInEx 插件目录，并自动启动游戏。
+## Comma/space/semicolon/etc separated list of mod GUIDs to ban.
+# Setting type: String
+# Default value: 
+ban_mods =
 
-**参数：**
+## When true, the server kicks any player who does NOT have THM installed.
+# Setting type: Boolean
+# Default value: false
+require_thm = false
 
-- `$GamePath` — 游戏安装目录（如 `E:/SteamLibrary/steamapps/common/Casualties Unknown Demo`）
-- `$ModNamespace` — 模组命名空间（如 `MyCoolMod`）
-
-**命令行运行：**
-
-```powershell
-.\StartGame.ps1 -GamePath "E:/SteamLibrary/steamapps/common/Casualties Unknown Demo" -ModNamespace "MyCoolMod"
+## Timeout in seconds before kicking a player who hasn't reported their mod list.
+# Setting type: Single
+# Default value: 15
+report_timeout = 15
 ```
 
-### JetBrains Rider 配置
+### Example
 
-1. 右键 [StartGame.ps1](StartGame.ps1) → `运行 'StartGame.ps1'`
-2. 点击编辑器右上角构建按钮旁的 `StartGame.ps1` 按钮 → `编辑配置...`
-3. 填写 `Script arguments:`：`"E:/SteamLibrary/steamapps/common/Casualties Unknown Demo" "MyCoolMod"`
-4. 设置 `Command parameters`：`-ExecutionPolicy Bypass`
-5. 点击 `执行前` 旁的加号 → `构建解决方案` → 确定
-
-之后每次按绿三角按钮即可自动构建、复制 DLL、启动游戏。
-
-### Visual Studio
-
-右键 [StartGame.ps1](StartGame.ps1) 选择 `运行`，手动填写参数。具体配置方式请自行研究。:P
-
----
-
-## 发布模组 (Release.ps1)
-
-[Release.ps1](Release.ps1) 用于构建、打包并发布模组到 NexusMods 和 GitHub Release。
-
-**基本用法：**
-```powershell
-.\Release.ps1                          # 交互式确认版本号后发布
-.\Release.ps1 -SkipNexus               # 只发 GitHub
-.\Release.ps1 -SkipBuild -SkipGitHub   # 只发 NexusMods（跳过构建）
+```ini
+ban_mods = net.cucorelib, CUAdvancedBossBar
+require_thm = true
 ```
 
-### NexusMods API Key 设置
+With this config, players connecting to the server must have Tick Happy Mod installed and must NOT have `net.cucorelib`
+or `CUAdvancedBossBar`.
 
-1. 登录 [NexusMods](https://www.nexusmods.com/)
-2. 进入 [API Access](https://www.nexusmods.com/casualtiesunknown/users/myaccount?tab=api) 页面
-3. 点击 `REQUEST API KEY` 获取 Key
+## How It Works
 
-**使用方式：**
-```powershell
-# 环境变量（推荐，一次设置永久有效）
-$env:NEXUS_API_KEY = "你的API Key"
-.\Release.ps1
+### Single-Player
 
-# 或命令行参数
-.\Release.ps1 -NexusApiKey "你的API Key"
+- `Awake()` checks `Chainloader.PluginInfos` against `BanModsList`.
+- If a banned mod is found locally → logs it → `Application.Quit()`.
+
+### Multiplayer (Server)
+
+1. Handler is injected into KrokoshaMP's `SERVER_MESSAGE_HANDLERS` dictionary via reflection.
+2. When a client joins (`NetPlayer.OnPlayerJoined`), the server starts a timeout timer.
+3. The client (if THM is installed) sends its full mod list via `Net.Client_Send`.
+4. The server checks the client's mods against `BanModsList`.
+5. If banned mods are found → `Server_DoAlertSingle` popup + `Net.Server_Kick`.
+6. If `require_thm` is true and no report arrives within `report_timeout` seconds → built-in KrokoshaMP alert + kick.
+
+### Multiplayer (Client)
+
+- On `OnPlayerJoined` with `is_local`, sends `Chainloader.PluginInfos.Keys` to the server.
+- No server-side mod needed for basic compatibility; only THM-equipped clients report their mods.
+
+## Development
+
+- **Target Framework:** .NET Framework 4.8
+- **Dependencies:** BepInEx 5, HarmonyLib, KrokoshaCasualtiesMP, LiteNetLib
+- **Build:** `dotnet build`
+
+### Project Structure
+
+```
+Tick-Happy-Mod/
+├── Plugin.cs                  # Main plugin logic
+├── TickHappyMod.csproj        # Project file
+├── Directory.Build.props      # Shared build properties (game path)
+├── README.md / README_ZH.md   # Documentation
+└── CHANGELOG.md / CHANGELOG_ZH.md
 ```
 
-### GitHub 认证
+## License
 
-```powershell
-# 安装 GitHub CLI
-winget install GitHub.cli
-
-# 登录
-gh auth login
-```
-
----
-
-## csproj 引用说明
-
-模板包含 15 个核心游戏 DLL 引用。如需额外引用（如动画、音频、粒子等），在 csproj 中取消注释或添加新条目：
-
-```xml
-<!-- 例如：添加音频模块 -->
-<Reference Include="UnityEngine.AudioModule">
-    <HintPath>__GAME_MANAGED_DIR__/UnityEngine.AudioModule.dll</HintPath>
-</Reference>
-```
-
-将 `__GAME_MANAGED_DIR__` 替换为你的游戏 Managed 目录实际路径。
+[GPL v3](LICENSE.md)

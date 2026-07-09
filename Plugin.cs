@@ -27,6 +27,7 @@ public class Plugin : BaseUnityPlugin
 
     public static ConfigEntry<string> BanMods;
     public static ConfigEntry<bool> RequireThm;
+    public static ConfigEntry<float> ReportTimeout;
 
     public static List<string> BanModsList =>
         BanMods?.Value
@@ -42,7 +43,6 @@ public class Plugin : BaseUnityPlugin
     private const ushort NetMsgId = 33993;
     private static bool _registered;
     private static readonly Dictionary<ushort, float> _pendingReports = new();
-    private const float ReportTimeout = 15f;
 
     public void Awake()
     {
@@ -60,6 +60,12 @@ public class Plugin : BaseUnityPlugin
             "require_thm",
             false,
             "When true, the server will kick any player who does NOT have Tick Happy Mod installed.");
+
+        ReportTimeout = Config.Bind(
+            Name,
+            "report_timeout",
+            15f,
+            "Grace time allowed for client links.");
 
         if (IsMpActive)
         {
@@ -98,25 +104,25 @@ public class Plugin : BaseUnityPlugin
         if (!RequireThm.Value) return;
 
         var now = Time.unscaledTime;
-        foreach (var kv in _pendingReports.ToList().Where(kv => !(now - kv.Value <= ReportTimeout)))
+        foreach (var keyValuePair in _pendingReports.ToList().Where(kv => !(now - kv.Value <= ReportTimeout.Value)))
         {
-            var msg = BuildKickMessage(required: true);
-            Logger.LogInfo($"Player clientId={kv.Key} timed out (no THM). Kicking: {msg}");
+            var message = BuildKickMessage(required: true);
+            Logger.LogInfo($"Player clientId={keyValuePair.Key} timed out (no THM). Kicking: {message}");
 
             try
             {
                 var writer = Net.CreateWriter(30006);
-                writer.Put(msg);
+                writer.Put(message);
                 writer.Put(true);
-                Net.Server_SendTo((DeliveryMethod)2, writer, new knetid(kv.Key));
+                Net.Server_SendTo((DeliveryMethod)2, writer, new knetid(keyValuePair.Key));
             }
             catch
             {
                 // ignored
             }
 
-            Net.Server_Kick(new knetid(kv.Key), msg);
-            _pendingReports.Remove(kv.Key);
+            Net.Server_Kick(new knetid(keyValuePair.Key), message);
+            _pendingReports.Remove(keyValuePair.Key);
         }
     }
 
@@ -152,6 +158,12 @@ public class Plugin : BaseUnityPlugin
 
             var ourMethod = typeof(Plugin).GetMethod(nameof(OnModReport),
                 BindingFlags.NonPublic | BindingFlags.Static);
+            if (ourMethod == null)
+            {
+                Logger.LogWarning("OnModReport method not found.");
+                return;
+            }
+
             var handler = Delegate.CreateDelegate(handlerType, ourMethod);
 
             dict[NetMsgId] = handler;
