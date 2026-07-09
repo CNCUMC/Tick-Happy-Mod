@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using BepInEx;
@@ -18,7 +18,11 @@ public class Plugin : BaseUnityPlugin
     private readonly Harmony _harmony = new(Guid);
 
     public static ConfigEntry<string> BanMods;
-    
+
+    /// <summary>
+    /// Splits BanMods config value by ",", ", " or " " delimiters into a list of strings.
+    /// Empty entries are automatically filtered out.
+    /// </summary>
     public static List<string> BanModsList =>
         BanMods?.Value
             ?.Split([',', ' '], StringSplitOptions.RemoveEmptyEntries)
