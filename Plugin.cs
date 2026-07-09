@@ -1,4 +1,8 @@
-﻿using BepInEx;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 
@@ -13,11 +17,25 @@ public class Plugin : BaseUnityPlugin
     internal new static ManualLogSource Logger;
     private readonly Harmony _harmony = new(Guid);
 
+    public static ConfigEntry<string> BanMods;
+    
+    public static List<string> BanModsList =>
+        BanMods?.Value
+            ?.Split([',', ' '], StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.Trim())
+            .Where(s => !string.IsNullOrEmpty(s))
+            .ToList() ?? [];
+
     public void Awake()
     {
         Logger = base.Logger;
-        _harmony.PatchAll();
 
-        Logger.LogInfo("Tick Happy Mod loaded!");
+        BanMods = Config.Bind(
+            Name,
+            "ban_mods",
+            "",
+            "The Guid list of mods to be banned can be divided in three ways: \",\" \", \" \"\nFor example: com.gouxi.gouxisfunnyshit, org.explosivehydra.lazyshooting");
+        
+        _harmony.PatchAll();
     }
 }

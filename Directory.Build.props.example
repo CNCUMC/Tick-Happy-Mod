@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-    <BaseGamePath>F:/SteamLibrary/steamapps/common/Casualties Unknown Demo</BaseGamePath>
-    <!-- <GameManagedDir>$(BaseGamePath)\CasualtiesUnknown_Data\Managed</GameManagedDir> -->
-    <!-- <BepInExDir>$(BaseGamePath)\BepInEx</BepInExDir> -->
+    <GameDir>F:/SteamLibrary/steamapps/common/Casualties Unknown Demo</GameDir>
+    <ManagedDir>$(GameDir)/CasualtiesUnknown_Data/Managed</ManagedDir>
   </PropertyGroup>
 </Project>
