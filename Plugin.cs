@@ -19,10 +19,6 @@ public class Plugin : BaseUnityPlugin
 
     public static ConfigEntry<string> BanMods;
 
-    /// <summary>
-    /// Splits BanMods config value by ",", ", " or " " delimiters into a list of strings.
-    /// Empty entries are automatically filtered out.
-    /// </summary>
     public static List<string> BanModsList =>
         BanMods?.Value
             ?.Split([',', ' '], StringSplitOptions.RemoveEmptyEntries)
