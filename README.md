@@ -5,8 +5,7 @@
 
 [GitHub](https://github.com/CNCUMC/Tick-Happy-Mod) | [NexusMods](https://www.nexusmods.com/scavprototype/mods/420)
 
-_A mod banning / player-kicking utility
-for [Casualties Unknown](https://store.steampowered.com/app/3624440/Casualties_Unknown_Demo/) multiplayer._
+If it detects specific (configurable) mod installed, the game crashes.
 
 _Inspired by [Bat Happy Mod](https://www.curseforge.com/minecraft/mc-mods/bat-happy-mod) for Minecraft by Snownee & forestbat121._
 
