@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
+using UnityEngine;
 
 namespace TickHappyMod;
 
@@ -21,7 +23,7 @@ public class Plugin : BaseUnityPlugin
 
     public static List<string> BanModsList =>
         BanMods?.Value
-            ?.Split([',', ' '], StringSplitOptions.RemoveEmptyEntries)
+            ?.Split([',', ' ', ';', '|', '、', '，', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
             .Where(s => !string.IsNullOrEmpty(s))
             .ToList() ?? [];
@@ -34,7 +36,18 @@ public class Plugin : BaseUnityPlugin
             Name,
             "ban_mods",
             "",
-            "The Guid list of mods to be banned can be divided in three ways: \",\" \", \" \"\nFor example: com.gouxi.gouxisfunnyshit, org.explosivehydra.lazyshooting");
+            "The Guid list of mods to be banned. Supports delimiters: \",\" \";\" \"|\" \"、\" \"，\" space tab newline.\nFor example: com.gouxi.gouxisfunnyshit, org.explosivehydra.lazyshooting");
+
+        var bannedMods = BanModsList.Where(banMod => Chainloader.PluginInfos.ContainsKey(banMod)).ToList();
+        foreach (var banMod in bannedMods)
+        {
+            Logger.LogInfo($"{banMod} has been banned!");
+        }
+
+        if (bannedMods.Count > 0)
+        {
+            Application.Quit();
+        }
         
         _harmony.PatchAll();
     }
