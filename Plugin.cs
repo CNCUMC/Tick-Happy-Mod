@@ -26,10 +26,11 @@ public class Plugin : BaseUnityPlugin
     private readonly Harmony _harmony = new(Guid);
 
     public static ConfigEntry<string> BanMods;
+    public static ConfigEntry<bool> RequireThm;
 
     public static List<string> BanModsList =>
         BanMods?.Value
-            ?.Split([',', ' ', ';', '|', '、', '，', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            ?.Split([',', ' ', ';', '|', '、', '，'], StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
             .Where(s => !string.IsNullOrEmpty(s))
             .ToList() ?? [];
@@ -40,6 +41,8 @@ public class Plugin : BaseUnityPlugin
 
     private const ushort NetMsgId = 33993;
     private static bool _registered;
+    private static readonly Dictionary<ushort, float> _pendingReports = new();
+    private const float ReportTimeout = 15f;
 
     public void Awake()
     {
@@ -52,13 +55,19 @@ public class Plugin : BaseUnityPlugin
             "The Guid list of mods to be banned. Supports delimiters: \",\" \";\" \"|\" \"、\" \"，\" space tab newline." +
             "\nFor example: com.gouxi.gouxisfunnyshit, org.explosivehydra.lazyshooting");
 
+        RequireThm = Config.Bind(
+            Name,
+            "require_thm",
+            false,
+            "When true, the server will kick any player who does NOT have Tick Happy Mod installed.");
+
         if (IsMpActive)
         {
-            Logger.LogInfo("Tick Happy Mod: Multiplayer mode detected.");
+            Logger.LogInfo("Multiplayer mode detected.");
 
             foreach (var banMod in BanModsList.Where(m => Chainloader.PluginInfos.ContainsKey(m)))
             {
-                Logger.LogWarning($"Tick Happy Mod: Banned mod '{banMod}' is loaded!");
+                Logger.LogWarning($"Banned mod '{banMod}' is loaded!");
             }
 
             NetPlayer.OnPlayerJoined += OnPlayerJoined;
@@ -70,6 +79,7 @@ public class Plugin : BaseUnityPlugin
             {
                 Logger.LogInfo($"{banMod} has been banned!");
             }
+
             if (bannedMods.Count > 0)
             {
                 Application.Quit();
@@ -81,40 +91,62 @@ public class Plugin : BaseUnityPlugin
 
     private void Update()
     {
-        if (_registered || !IsMpActive || !Net.is_server || !Net.running) return;
-        RegisterHandler();
+        if (!IsMpActive || !Net.is_server) return;
+        if (!_registered && Net.running)
+            RegisterHandler();
+        if (!_registered) return;
+        if (!RequireThm.Value) return;
+
+        var now = Time.unscaledTime;
+        foreach (var kv in _pendingReports.ToList().Where(kv => !(now - kv.Value <= ReportTimeout)))
+        {
+            var msg = BuildKickMessage(required: true);
+            Logger.LogInfo($"Player clientId={kv.Key} timed out (no THM). Kicking: {msg}");
+
+            try
+            {
+                var writer = Net.CreateWriter(30006);
+                writer.Put(msg);
+                writer.Put(true);
+                Net.Server_SendTo((DeliveryMethod)2, writer, new knetid(kv.Key));
+            }
+            catch
+            {
+                // ignored
+            }
+
+            Net.Server_Kick(new knetid(kv.Key), msg);
+            _pendingReports.Remove(kv.Key);
+        }
     }
 
     private static void RegisterHandler()
     {
         try
         {
-            // Access the internal SERVER_MESSAGE_HANDLERS dictionary
             var field = AccessTools.Field(typeof(Net), "SERVER_MESSAGE_HANDLERS");
             if (field == null)
             {
-                // Try alternative field names
                 field = AccessTools.Field(typeof(Net), "_SERVER_MESSAGE_HANDLERS");
             }
+
             if (field == null)
             {
-                Logger.LogWarning("Tick Happy Mod: SERVER_MESSAGE_HANDLERS field not found.");
+                Logger.LogWarning("SERVER_MESSAGE_HANDLERS field not found.");
                 return;
             }
 
-            var dict = field.GetValue(null) as IDictionary;
-            if (dict == null)
+            if (field.GetValue(null) is not IDictionary dict)
             {
-                Logger.LogWarning("Tick Happy Mod: SERVER_MESSAGE_HANDLERS is null.");
+                Logger.LogWarning("SERVER_MESSAGE_HANDLERS is null.");
                 return;
             }
 
-            // Create delegate matching KrokoshaScavMultiplayer.KrokoshaHandleNamedMessageDelegate
             var handlerType = typeof(KrokoshaScavMultiplayer).GetNestedType("KrokoshaHandleNamedMessageDelegate",
                 BindingFlags.Public | BindingFlags.NonPublic);
             if (handlerType == null)
             {
-                Logger.LogWarning("Tick Happy Mod: KrokoshaHandleNamedMessageDelegate not found.");
+                Logger.LogWarning("KrokoshaHandleNamedMessageDelegate not found.");
                 return;
             }
 
@@ -124,11 +156,11 @@ public class Plugin : BaseUnityPlugin
 
             dict[NetMsgId] = handler;
             _registered = true;
-            Logger.LogInfo("Tick Happy Mod: Handler registered in SERVER_MESSAGE_HANDLERS.");
+            Logger.LogInfo("Handler registered in SERVER_MESSAGE_HANDLERS.");
         }
         catch (Exception ex)
         {
-            Logger.LogError($"Tick Happy Mod: Register error: {ex.Message}");
+            Logger.LogError($"Register error: {ex.Message}");
         }
     }
 
@@ -136,7 +168,7 @@ public class Plugin : BaseUnityPlugin
     {
         if (player.is_local && Net.is_client)
         {
-            Logger.LogInfo("Tick Happy Mod: Reporting mod list to server...");
+            Logger.LogInfo("Reporting mod list to server...");
             var modList = string.Join(",", Chainloader.PluginInfos.Keys);
             var writer = Net.CreateWriter(NetMsgId);
             writer.Put(modList);
@@ -146,30 +178,58 @@ public class Plugin : BaseUnityPlugin
 
         if (!Net.is_server || player.is_host || player.is_local) return;
 
-        Logger.LogInfo($"Tick Happy Mod: Player '{player.playername}' (clientId={player.clientId}) joined.");
+        Logger.LogInfo($"Player '{player.playername}' (clientId={player.clientId}) joined.");
+
+        if (RequireThm.Value)
+        {
+            _pendingReports[player.clientId] = Time.unscaledTime;
+        }
     }
 
-    /// <summary>
-    /// Called on the server when a client sends a mod report.
-    /// Signature matches KrokoshaHandleNamedMessageDelegate (knetid, ref NetDataReader).
-    /// </summary>
+    private static string BuildKickMessage(bool required = false, List<string> banned = null)
+    {
+        var parts = new List<string>();
+        if (required)
+            parts.Add("this server requires Tick Happy Mod");
+        if (banned is { Count: > 0 })
+            parts.Add($"banned mods: {string.Join(", ", banned)}");
+        return "Kicked: " + string.Join(" | ", parts);
+    }
+
     private static void OnModReport(knetid clientId, ref NetDataReader reader)
     {
+        var ushortId = (ushort)clientId;
+        _pendingReports.Remove(ushortId);
+
         var modListCsv = reader.GetString();
         var mods = modListCsv.Split([','], StringSplitOptions.RemoveEmptyEntries)
             .Select(m => m.Trim()).Where(m => m.Length > 0).ToList();
 
-        Logger.LogInfo($"Tick Happy Mod: Mod report from clientId={clientId}: {mods.Count} mod(s).");
+        Logger.LogInfo($"Mod report from clientId={clientId}: {mods.Count} mod(s).");
 
         var banned = mods.Where(m => BanModsList.Contains(m)).ToList();
         if (banned.Count <= 0)
         {
-            Logger.LogInfo($"Tick Happy Mod: Client (clientId={clientId}) mods clean.");
+            Logger.LogInfo($"Client (clientId={clientId}) mods clean.");
             return;
         }
 
-        var reason = $"Kicked: banned mod(s): {string.Join(", ", banned)}";
-        Logger.LogInfo($"Tick Happy Mod: {reason}");
-        Net.Server_Kick(clientId, reason);
+        var msg = BuildKickMessage(banned: banned);
+        Logger.LogInfo($"{msg}");
+
+        try
+        {
+            var player = NetPlayer.GetNetPlayerFromClientId(clientId);
+            if (player != null)
+            {
+                player.Server_DoAlertSingle(msg);
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+
+        Net.Server_Kick(clientId, msg);
     }
 }
