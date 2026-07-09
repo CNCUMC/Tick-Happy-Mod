@@ -23,7 +23,7 @@ public class Plugin : BaseUnityPlugin
 
     public static List<string> BanModsList =>
         BanMods?.Value
-            ?.Split([',', ' ', ';', '|', '、', '，', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            ?.Split([',', ' ', ';', '|', '、', '，'], StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
             .Where(s => !string.IsNullOrEmpty(s))
             .ToList() ?? [];
@@ -36,7 +36,8 @@ public class Plugin : BaseUnityPlugin
             Name,
             "ban_mods",
             "",
-            "The Guid list of mods to be banned. Supports delimiters: \",\" \";\" \"|\" \"、\" \"，\" space tab newline.\nFor example: com.gouxi.gouxisfunnyshit, org.explosivehydra.lazyshooting");
+            "The Guid list of mods to be banned. Supports delimiters: \",\" \";\" \"|\" \"、\" \"，\" space tab newline." +
+            "\nFor example: com.gouxi.gouxisfunnyshit, org.explosivehydra.lazyshooting");
 
         var bannedMods = BanModsList.Where(banMod => Chainloader.PluginInfos.ContainsKey(banMod)).ToList();
         foreach (var banMod in bannedMods)
@@ -48,7 +49,7 @@ public class Plugin : BaseUnityPlugin
         {
             Application.Quit();
         }
-        
+
         _harmony.PatchAll();
     }
 }
