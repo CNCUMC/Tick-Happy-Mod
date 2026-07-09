@@ -1,6 +1,9 @@
+![Logo](Logo.png)
 # 蜱虫快乐模组
 
 [English Guide](README.md)
+
+[GitHub](https://github.com/CNCUMC/Tick-Happy-Mod) | [NexusMods](https://www.nexusmods.com/scavprototype/mods/420)
 
 _一个用于 [Casualties Unknown](https://store.steampowered.com/app/3624440/Casualties_Unknown_Demo/)
 多人模式的模组封禁/玩家踢出工具。_

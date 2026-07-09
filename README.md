@@ -1,6 +1,9 @@
+![Logo](Logo.png)
 # Tick Happy Mod
 
 [中文指南](README_ZH.md)
+
+[GitHub](https://github.com/CNCUMC/Tick-Happy-Mod) | [NexusMods](https://www.nexusmods.com/scavprototype/mods/420)
 
 _A mod banning / player-kicking utility
 for [Casualties Unknown](https://store.steampowered.com/app/3624440/Casualties_Unknown_Demo/) multiplayer._
