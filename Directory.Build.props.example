@@ -3,5 +3,7 @@
   <PropertyGroup>
     <GameDir>F:/SteamLibrary/steamapps/common/Casualties Unknown Demo</GameDir>
     <ManagedDir>$(GameDir)/CasualtiesUnknown_Data/Managed</ManagedDir>
+    <KrokoshaCasualtiesMPDll>$(GameDir)/BepInEx/plugins/KrokMP/KrokoshaCasualtiesMP.dll</KrokoshaCasualtiesMPDll>
+    <LiteNetLibDll>$(GameDir)/BepInEx/plugins/KrokMP/LiteNetLib.dll</LiteNetLibDll>
   </PropertyGroup>
 </Project>

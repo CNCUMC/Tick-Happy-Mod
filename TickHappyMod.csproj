@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net472</TargetFramework>
+        <TargetFramework>net48</TargetFramework>
         <Product>TickHappyMod</Product>
         <Version>1.0.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -11,10 +11,24 @@
             https://nuget.samboy.dev/v3/index.json
         </RestoreAdditionalProjectSources>
         <Platforms>AnyCPU;x64;x86</Platforms>
-        <PackageProjectUrl>https://github.com/yourname/TickHappyMod</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/yourname/TickHappyMod</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/CNCUMC/TickHappyMod</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/CNCUMC/TickHappyMod</RepositoryUrl>
         <PackageId>TickHappyMod</PackageId>
     </PropertyGroup>
+
+    <!-- KrokoshaCasualtiesMP (MP) -->
+    <ItemGroup>
+        <Reference Include="KrokoshaCasualtiesMP">
+            <HintPath>$(KrokoshaCasualtiesMPDll)</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <!-- LiteNetLib -->
+    <ItemGroup>
+        <Reference Include="LiteNetLib">
+            <HintPath>$(LiteNetLibDll)</HintPath>
+        </Reference>
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all"/>
@@ -27,6 +41,12 @@
     <ItemGroup>
         <Reference Include="Assembly-CSharp">
             <HintPath>$(ManagedDir)/Assembly-CSharp.dll</HintPath>
+        </Reference>
+        <Reference Include="ModNotifier">
+          <HintPath>..\..\..\Downloads\ModNotifier 216 0.3 2026-06-12T12-39Z g1lPTuMbh\ModNotifier.dll</HintPath>
+        </Reference>
+        <Reference Include="KrokoshaCasualtiesMP">
+          <HintPath>$(KrokoshaCasualtiesMPDll)</HintPath>
         </Reference>
         <Reference Include="UnityEngine">
             <HintPath>$(ManagedDir)/UnityEngine.dll</HintPath>
