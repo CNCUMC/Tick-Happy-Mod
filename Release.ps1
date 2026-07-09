@@ -45,9 +45,9 @@
 #>
 param(
     [string]$ModNamespace = "TickHappyMod",
-    [string]$ModDisplayName = "__MOD_DISPLAY_NAME__",
-    [string]$ModVersion = "__MOD_VERSION__",
-    [int]$NexusModId = 0,
+    [string]$ModDisplayName = "Tick Happy Mod",
+    [string]$ModVersion = "1.0.0",
+    [int]$NexusModId = 420,
     [string]$Configuration = "Release",
     [string]$NexusApiKey = $env:NEXUS_API_KEY,
     [string]$GamePath,
