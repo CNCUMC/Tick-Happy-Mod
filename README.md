@@ -5,7 +5,11 @@
 
 [GitHub](https://github.com/CNCUMC/Tick-Happy-Mod) | [NexusMods](https://www.nexusmods.com/scavprototype/mods/420)
 
-If it detects specific (configurable) mod installed, the game crashes.
+If it detects specfic (configurable) mod installed, the game crashes. 
+
+If the host installation client is not installed, the client cannot enter.
+
+If both are installed, the client's mod list will be detected.
 
 _Inspired by [Bat Happy Mod](https://www.curseforge.com/minecraft/mc-mods/bat-happy-mod) for Minecraft by Snownee & forestbat121._
 
