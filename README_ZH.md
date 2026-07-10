@@ -5,8 +5,11 @@
 
 [GitHub](https://github.com/CNCUMC/Tick-Happy-Mod) | [NexusMods](https://www.nexusmods.com/scavprototype/mods/420)
 
-_一个用于 [Casualties Unknown](https://store.steampowered.com/app/3624440/Casualties_Unknown_Demo/)
-多人模式的模组封禁/玩家踢出工具。_
+如果检测到安装了特定的（可配置的）模组，游戏就会崩溃。
+
+如果主机安装客户端未安装，则客户端无法进入。
+
+如果两者都安装，则会检测客户端的模组列表。
 
 _灵感来源于 Snownee 和 forestbat121 的 Minecraft 模组 [蝙蝠快乐模组](https://www.curseforge.com/minecraft/mc-mods/bat-happy-mod)。_
 
